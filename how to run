@@ -1,0 +1,5 @@
+open terminal
+ketik venv\Scripts\activate
+download semua library yang dibutuhkan
+kemudian run database.py (jika run eror coba ketik di terminal python "filepath database")
+kemudian run app.py (jika run eror coba ketik di terminal python "filepath app")
