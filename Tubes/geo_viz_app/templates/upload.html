@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Data - GeoSpatial Map{% endblock %}
+
+{% block content %}
+<h1>Upload Location Data</h1>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-muted">
+                            File CSV harus berisikan hal-hal dibawah ini:
+                            <ul>
+                                <li><strong>name</strong> - The name of the location</li>
+                                <li><strong>latitude</strong> - Latitude coordinate</li>
+                                <li><strong>longitude</strong> - Longitude coordinate</li>
+                                <li><em>description</em> (optional) - Description of the location</li>
+                                <li><em>category</em> (optional) - Category or type of location</li>
+                            </ul>
+                        </p>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Sample CSV Format</h5>
+                <pre class="bg-light p-3 rounded">
+name,latitude,longitude,description,category
+smp bumi,40.7829,-73.9654,sekolah menengah negeri di bumi,smp
+sd mars,40.7484,-73.9857,sekolah dasar pokonya,sd
+SMA BEKASI,40.7580,-73.9855,sekolah menengah atas,sma
+</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
