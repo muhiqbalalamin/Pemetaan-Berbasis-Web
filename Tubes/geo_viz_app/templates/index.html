@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Home - GeoSpatial Map{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Pemetaan Sekolah Daerah Bandung</h1>
+    <p class="lead">edit ini nanti.</p>
+    <hr class="my-4">
+    <p>Buka peta atau Tambahkan data.</p>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('map_view') }}" role="button">View Map</a>
+        {% if current_user.is_authenticated %}
+        <a class="btn btn-success btn-lg" href="{{ url_for('upload_csv') }}" role="button">Upload Data</a>
+        {% else %}
+        <a class="btn btn-secondary btn-lg" href="{{ url_for('login') }}" role="button">Login to Upload</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="jumbotron">
+        <p>Fitur-Fitur :</p>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Map Interaktif</h5>
+                <p class="card-text">Jelajahi lokasi pada peta interaktif dengan penanda dari sekolah di daerah Bandung.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Filter Data</h5>
+                <p class="card-text">Filter data lokasi berdasarkan kategori atau cari lokasi tertentu.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">User Accounts</h5>
+                <p class="card-text">Menyimpan lokasi favorit Anda(Coming soon) dan Pengecekan Sekolah.</p>
+            </div>
+        </div>
+    </div>
+    <p></p>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Pengecekan Zonasi</h5>
+                <p class="card-text">Melakukan pengecekan zonasi sekolah di daerah Bandung berdasarkan lokasi anda.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
