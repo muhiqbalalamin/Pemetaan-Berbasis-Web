@@ -1,5 +1,6 @@
 open terminal
 ketik venv\Scripts\activate
+kalau belum bisa coba buat dulu folder venv dengan menggunakan python -m venv venv
 download semua library yang dibutuhkan
 buat file .env di dalam direktori geo_viz_app yang berisi
 SECRET_KEY=7b9a5fd69fa1a9122b58d1b9e56a4938
