@@ -12,5 +12,5 @@ CSV_FILE_PATH=isi dengan path anda sendiri contoh "C:\VS\SEM6\Tubes\geo_viz_app\
 ADMIN_REGISTRATION_CODE=12345
 
 buka aplikasi Xampp dan start Apache dan Mysql
-kemudian run database.py (jika run eror coba ketik di terminal python "filepath database")
-kemudian run app.py (jika run eror coba ketik di terminal python "filepath app")
+kemudian run dengan mengetik python database.py di terminal (jika run eror coba ketik di terminal python "filepath database")
+kemudian run dengan mengetik python app.py di terminal (jika run eror coba ketik di terminal python "filepath app")
