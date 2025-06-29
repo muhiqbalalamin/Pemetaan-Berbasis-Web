@@ -1,0 +1,11 @@
+BUAT .env
+
+SECRET_KEY=7b9a5fd69fa1a9122b58d1b9e56a4938
+DB_USER=root
+DB_PASSWORD=
+DB_HOST=localhost
+DB_NAME=geospatial_db
+CSV_FILE_PATH="...\Tubes\geo_viz_app\DataSekolahTPBW .csv" (sesuaikan dengan Path di Komputer anda)
+DASHBOARD_BG=images/bandung1.png
+DEFAULT_BG=images/bandung2.png
+ADMIN_REGISTRATION_CODE=12345
