@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistik{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Statistik Persebaran Sekolah</h1>
+    
+    <!-- First Row - Pie Chart for Registration Distribution by Year -->
+    <div class="card mb-4 shadow">
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <h5 class="card-title mb-2 mb-md-0">Distribusi Pendaftar Berdasarkan Tahun</h5>
+            <div class="form-group mb-0">
+                <select id="yearFilter" class="form-select form-select-sm">
+                    <option value="ALL">Semua Tahun</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="registrationDistributionChart" style="height: 400px;"></div>
+        </div>
+    </div>
+    
+    <!-- Second Row - Two Side-by-Side Cards -->
+    <div class="row">
+        <!-- Left Card - School Status Distribution -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-4">Distribusi Sekolah</h5>
+                    
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="bg-light-pink p-3 text-center rounded">
+                                <h6>Sekolah<br>Negeri</h6>
+                                <h2 class="mb-0">{{ negeri_percentage|round(1) }}%</h2>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light-blue p-3 text-center rounded">
+                                <h6>Sekolah<br>Swasta</h6>
+                                <h2 class="mb-0">{{ swasta_percentage|round(1) }}%</h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="school-types">
+                        {% for type in school_types %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <div>
+                                    <i class="fas fa-circle text-primary"></i> 
+                                    {{ type.bp }} {{ type.status }}
+                                </div>
+                                <div>{{ type.count }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">Total Sekolah: {{ total_schools }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Card - Schools List with Filtering -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Daftar 10 Sekolah Terbaik</h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary active" data-filter="ALL">Semua</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-filter="SD">SD</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-filter="SMP">SMP</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-filter="SMA">SMA</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-filter="SMK">SMK</button>
+                        </div>
+                    </div>
+
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover" id="schools-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Sekolah</th>
+                                    <th>NPSN</th>
+                                    <th>Jenis</th>
+                                    <th>Status</th>
+                                    <th>Akreditasi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for school in top_schools %}
+                                <tr data-category="{{ school.bp }}" data-year="{{ school.tahun }}">
+                                    <td class="row-number"></td>
+                                    <td>{{ school.nama_sekolah }}</td>
+                                    <td>{{ school.npsn }}</td>
+                                    <td>{{ school.bp }}</td>
+                                    <td>{{ school.status }}</td>
+                                    <td>{{ school.akreditasi or 'Tidak Ada' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize row numbers
+        updateRowNumbers();
+        
+        // Initialize variables
+        let chart = null;
+        const yearFilter = document.getElementById('yearFilter');
+        
+        // Load available years
+        loadAvailableYears();
+        
+        // Load initial chart with all data
+        loadChartData('ALL');
+        
+        // Add event listeners
+        yearFilter.addEventListener('change', function() {
+            loadChartData(yearFilter.value);
+            applyFilters();
+        });
+        
+        document.querySelectorAll('[data-filter]').forEach(button => {
+            button.addEventListener('click', function () {
+                activeCategory = this.getAttribute('data-filter');
+                
+                document.querySelectorAll('[data-filter]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                applyFilters();
+            });
+        });
+        
+        // Function to load available years
+        function loadAvailableYears() {
+            fetch('/available-years')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(years => {
+                    // Clear existing options except default
+                    while (yearFilter.options.length > 1) {
+                        yearFilter.remove(1);
+                    }
+                    
+                    // Add year options
+                    years.forEach(year => {
+                        const option = document.createElement('option');
+                        option.value = year;
+                        option.textContent = year;
+                        yearFilter.appendChild(option);
+                    });
+                })
+                .catch(err => {
+                    console.error('Error loading available years:', err);
+                });
+        }
+        
+        // Function to load chart data
+        function loadChartData(year) {
+            // Show loading state
+            const chartContainer = document.getElementById('registrationDistributionChart');
+            chartContainer.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading chart data...</p></div>';
+            
+            // Build URL
+            let url = '/registration-distribution-by-bp';
+            if (year !== 'ALL') {
+                url += `?tahun=${year}`;
+            }
+            
+            // Fetch data
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Chart data received:", data);
+                    renderChart(data, year);
+                })
+                .catch(err => {
+                    console.error('Error loading chart data:', err);
+                    // Show error in chart
+                    renderChart([{
+                        name: 'Error Loading Data',
+                        y: 100,
+                        jumlah_pendaftar: 0
+                    }], year);
+                });
+        }
+        
+        // Function to render chart
+        function renderChart(data, year) {
+            // Ensure data is valid
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                data = [{
+                    name: 'Tidak Ada Data',
+                    y: 100,
+                    jumlah_pendaftar: 0
+                }];
+            }
+            
+            // Destroy existing chart if it exists
+            if (chart) {
+                chart.destroy();
+            }
+            
+            // Create new chart
+            chart = Highcharts.chart('registrationDistributionChart', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: `Persentase Pendaftar per Jenis Sekolah (${year === 'ALL' ? 'Semua Tahun' : year})`
+                },
+                tooltip: {
+                    pointFormat: '<b>{point.jumlah_pendaftar} pendaftar</b> ({point.y:.1f}%)'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.y:.1f}%'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Pendaftar',
+                    colorByPoint: true,
+                    data: data
+                }]
+            });
+        }
+    });
+    
+    // --- Table filtering ---
+    let activeCategory = "ALL";
+
+    function applyFilters() {
+        const selectedYear = document.getElementById('yearFilter').value;
+        const table = document.getElementById('schools-table');
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const category = row.getAttribute('data-category')?.toUpperCase();
+            const year = row.getAttribute('data-year');
+            
+            const matchCategory = activeCategory === "ALL" || category === activeCategory;
+            const matchYear = selectedYear === "ALL" || year === selectedYear;
+
+            row.style.display = (matchCategory && matchYear) ? '' : 'none';
+        });
+
+        updateRowNumbers();
+    }
+
+    function updateRowNumbers() {
+        const table = document.getElementById('schools-table');
+        const rows = table.querySelectorAll('tbody tr');
+        let counter = 1;
+
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                row.querySelector('.row-number').textContent = counter++;
+            } else {
+                row.querySelector('.row-number').textContent = '';
+            }
+        });
+    }
+</script>
+
+<style>
+    .bg-light-pink {
+        background-color: #FFE6E6;
+    }
+
+    .bg-light-blue {
+        background-color: #E6F1FF;
+    }
+
+    .school-types i {
+        font-size: 12px;
+    }
+
+    .btn-group .btn.active {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+{% endblock %}

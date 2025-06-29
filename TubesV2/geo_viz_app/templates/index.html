@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Home - GeoSpatial Map{% endblock %}
+
+{% block content %}
+<div class="hero-section p-5 mb-4 rounded-4 shadow-lg" style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.25);">
+    <div class="container-fluid py-5 text-center text-dark">
+        <h1 class="display-3 fw-bold" style="text-shadow: 0px 2px 4px rgba(255,255,255,0.7);">Pemetaan Sekolah Daerah Bandung</h1>
+        <p class="lead" style="text-shadow: 0px 1px 3px rgba(255,255,255,0.7);">dan Pengecekan Zonasi Sekolah Daerah Bandung.</p>
+        <hr class="my-4" style="border-top: 2px solid rgba(0,0,0,0.2); width: 50px; margin: auto;">
+        <p class="mt-4" style="text-shadow: 0px 1px 3px rgba(255,255,255,0.5);">Buka peta atau lakukan pengecekan.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a class="btn btn-primary btn-lg rounded-pill px-4" href="{{ url_for('map_view') }}" role="button">View Map</a>
+            {% if current_user.is_authenticated %}
+            <a class="btn btn-success btn-lg rounded-pill px-4" href="{{ url_for('nearby_schools') }}" role="button">Cek Zonasi</a>
+            {% else %}
+            <a class="btn btn-secondary btn-lg rounded-pill px-4" href="{{ url_for('login') }}" role="button">Login to Use</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<section class="container my-5">
+    <h2 class="text-center mb-5 text-white" style="text-shadow: 0px 2px 4px rgba(0,0,0,0.5);">Fitur-Fitur</h2>
+    <div class="row g-4">
+        {% set features = [
+            {"title": "Map Interaktif", "desc": "Jelajahi lokasi pada peta interaktif dengan penanda dari sekolah di daerah Bandung."},
+            {"title": "Filter Data", "desc": "Filter data lokasi berdasarkan kategori, biaya pendaftaran dan SPP atau cari lokasi tertentu."},
+            {"title": "User Accounts", "desc": "Pembuatan akun untuk bisa menggunakan fitur pengecekan zonasi dan menyimpan sekolah favorit."},
+            {"title": "Pengecekan Zonasi", "desc": "Melakukan pengecekan zonasi sekolah di daerah Bandung berdasarkan lokasi anda."}
+        ] %}
+        {% for feature in features %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 bg-light bg-opacity-75 shadow-sm border-0 hover-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-bold">{{ feature.title }}</h5>
+                    <p class="card-text">{{ feature.desc }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<style>
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}

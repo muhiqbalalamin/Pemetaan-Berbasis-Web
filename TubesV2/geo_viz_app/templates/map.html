@@ -1,0 +1,1071 @@
+{% extends "base.html" %}
+
+{% block title %}Map - GeoSpatial Map{% endblock %}
+
+{% block head %}
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .filters {
+        position: absolute;
+        top: 60px;
+        left: 60px;
+        z-index: 9998;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        backdrop-filter: blur(10px);
+        max-width: 800px;
+        min-width: 700px;
+    }
+    
+    .filter-row {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        margin-bottom: 15px;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        align-items: end;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background: #1a73e8;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #1557b0;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #f8f9fa;
+        color: #5f6368;
+        border: 1px solid #dadce0;
+    }
+    
+    .btn-secondary:hover {
+        background: #e8f0fe;
+    }
+    
+    .navbar {
+        position: relative;
+        z-index: 9999;
+    }
+    
+    #map {
+        position: absolute;
+        top: 50px;
+        left: 0;
+        height: calc(100vh - 50px);
+        width: 100%;
+        z-index: 1;
+        transition: width 0.3s ease;
+    }
+    
+    #map.with-sidebar {
+        width: calc(100% - 400px);
+    }
+    
+    .sidebar {
+        position: fixed;
+        top: 50px;
+        right: -400px;
+        width: 400px;
+        height: calc(100vh - 50px);
+        background: white;
+        box-shadow: -2px 0 20px rgba(0,0,0,0.1);
+        z-index: 9997;
+        transition: right 0.3s ease;
+        overflow-y: auto;
+    }
+    
+    .sidebar.active {
+        right: 0;
+    }
+    
+    .sidebar-header {
+        position: relative;
+        padding: 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .sidebar-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 48px;
+    }
+    
+    .close-sidebar {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: background 0.2s ease;
+    }
+    
+    .close-sidebar:hover {
+        background: rgba(0,0,0,0.7);
+    }
+    
+    .sidebar-content {
+        padding: 20px;
+    }
+    
+    .school-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 5px 0;
+        color: #1a73e8;
+    }
+    
+    .school-category {
+        color: #666;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    
+    .rating-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .rating-score {
+        font-size: 18px;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+    
+    .stars {
+        color: #fbbc04;
+        margin-right: 8px;
+    }
+    
+    .review-count {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .action-btn {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #dadce0;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: #1a73e8;
+    }
+    
+    .action-btn:hover {
+        background: #f8f9fa;
+        transform: translateY(-1px);
+        color: #1a73e8;
+        text-decoration: none;
+    }
+    
+    .action-btn i {
+        font-size: 20px;
+    }
+    
+    .info-section {
+        margin-bottom: 20px;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 15px;
+        color: #666;
+        flex-shrink: 0;
+    }
+    
+    .info-content {
+        flex: 1;
+    }
+    
+    .info-title {
+        font-weight: 500;
+        margin-bottom: 2px;
+        color: #333;
+    }
+    
+    .info-text {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    .enhanced-popup {
+        min-width: 250px;
+    }
+    
+    .popup-header {
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 8px;
+        color: #1a73e8;
+    }
+    
+    .popup-category {
+        background: #e8f0fe;
+        color: #1a73e8;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+    
+    .popup-description {
+        margin-bottom: 10px;
+        color: #5f6368;
+        font-size: 14px;
+    }
+    
+    .popup-coordinates {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 12px;
+    }
+    
+    .popup-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .popup-btn {
+        padding: 6px 12px;
+        border: 1px solid #dadce0;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: #1a73e8;
+    }
+    
+    .popup-btn:hover {
+        background: #f8f9fa;
+        text-decoration: none;
+        color: #1a73e8;
+    }
+    
+    .popup-btn.primary {
+        background: #1a73e8;
+        color: white;
+        border-color: #1a73e8;
+    }
+    
+    .popup-btn.primary:hover {
+        background: #1557b0;
+        color: white;
+    }
+
+    @media (max-width: 1024px) {
+        .filters {
+            right: 10px;
+            left: 10px;
+            max-width: none;
+            min-width: auto;
+        }
+        
+        .filter-row {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .filter-group {
+            min-width: auto;
+        }
+    }
+
+    @media (max-width: 768px) {        
+        .sidebar {
+            width: 100%;
+            right: -100%;
+        }
+        
+        #map.with-sidebar {
+            width: 100%;
+        }
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<body>
+    <div class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="category-filter">Category</label>
+                <select id="category-filter">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="entrance-fee-filter">Entrance Fee Range</label>
+                <select id="entrance-fee-filter">
+                    <option value="">All Ranges</option>
+                    <option value="1000000-5000000">Rp 1,000,000 - Rp 5,000,000</option>
+                    <option value="5000000-10000000">Rp 5,000,000 - Rp 10,000,000</option>
+                    <option value="10000000-25000000">Rp 10,000,000 - Rp 25,000,000</option>
+                    <option value="25000000-50000000">Rp 25,000,000 - Rp 50,000,000</option>
+                    <option value="50000000-100000000">Rp 50,000,000 - Rp 100,000,000</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="spp-filter">SPP Range</label>
+                <select id="spp-filter">
+                    <option value="">All Ranges</option>
+                    <option value="0-500000">Rp 0 - Rp 500,000</option>
+                    <option value="500000-1000000">Rp 500,000 - Rp 1,000,000</option>
+                    <option value="1000000-2000000">Rp 1,000,000 - Rp 2,000,000</option>
+                    <option value="2000000-5000000">Rp 2,000,000 - Rp 5,000,000</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="search-filter">Search Locations</label>
+                <input type="text" id="search-filter" placeholder="Enter location name or description">
+            </div>
+            <div class="filter-actions">
+                <button id="apply-filters" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                <button id="clear-filters" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+                <button id="show-saved-only" class="btn btn-secondary" style="display: none;">
+                    <i class="fas fa-bookmark"></i> Show Saved Only
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-image" id="sidebar-image">
+                <i class="fas fa-school"></i>
+            </div>
+            <button class="close-sidebar" onclick="closeSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="sidebar-content">
+            <h2 class="school-title" id="sidebar-title">School Name</h2>
+            <div class="school-category" id="sidebar-category">Category</div>
+            
+
+            
+            <div class="action-buttons">
+                <a href="#" class="action-btn" id="directions-btn">
+                    <i class="fas fa-directions"></i>
+                    <span>Directions</span>
+                </a>
+                <a href="#" class="action-btn" id="save-btn">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Save</span>
+                </a>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-item" id="contact-info">
+                    <i class="fas fa-address-book info-icon"></i>
+                    <div class="info-content">
+                        <div class="info-title">Contact</div>
+                        <div class="info-text" id="sidebar-contact">
+                            <div id="phone-contact" style="margin-bottom: 5px;">
+                                <i class="fas fa-phone" style="margin-right: 5px; width: 12px;"></i>
+                                <span id="sidebar-phone">(022) 7564108</span>
+                            </div>
+                            <div id="email-contact">
+                                <i class="fas fa-envelope" style="margin-right: 5px; width: 12px;"></i>
+                                <a href="#" id="sidebar-email" style="color: #1a73e8;">email@school.com</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-item" id="costs-info">
+                    <i class="fas fa-money-bill-wave info-icon"></i>
+                    <div class="info-content">
+                        <div class="info-title">Costs</div>
+                        <div class="info-text" id="sidebar-costs">
+                            <div id="spp-cost" style="margin-bottom: 5px;">
+                                <strong>SPP:</strong> <span id="sidebar-spp">-</span>
+                            </div>
+                            <div id="entry-cost">
+                                <strong>Entry Fee:</strong> <span id="sidebar-entry-fee">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-item" id="website-info" style="display: none;">
+                    <i class="fas fa-globe info-icon"></i>
+                    <div class="info-content">
+                        <div class="info-title">Website</div>
+                        <div class="info-text">
+                            <a href="#" id="sidebar-website" target="_blank" style="color: #1a73e8;">Visit website</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <i class="fas fa-info-circle info-icon"></i>
+                    <div class="info-content">
+                        <div class="info-title">Description</div>
+                        <div class="info-text" id="sidebar-description">
+                            <div id="status-description" style="margin-bottom: 8px;">Loading description...</div>
+                            <div id="accreditation-info" style="margin-bottom: 8px;">
+                                <strong>Accreditation:</strong> <span id="sidebar-accreditation">-</span>
+                            </div>
+                            <div id="facilities-info">
+                                <strong>Facilities:</strong> <span id="sidebar-facilities">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-item" id="created-info" style="display: none;">
+                    <i class="fas fa-calendar info-icon"></i>
+                    <div class="info-content">
+                        <div class="info-title">Created</div>
+                        <div class="info-text" id="sidebar-created"></div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <i class="fas fa-crosshairs info-icon"></i>
+                    <div class="info-content">
+                        <div class="info-title">Coordinates</div>
+                        <div class="info-text" id="sidebar-coordinates">0.000000, 0.000000</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body> 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const isUserLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
+    // Initialize the map
+    const map = L.map('map').setView([0, 0], 2);
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // Store all markers and current selected location
+    let markers = [];
+    let categories = new Set();
+    let currentLocation = null;
+    
+    // Function to determine marker icon URL based on category
+    function getMarkerIconUrl(category) {
+        const iconColors = {
+            'SD': 'green',
+            'SMP': 'blue', 
+            'SMA': 'orange',
+            'SMK': 'violet'
+        };
+        const color = iconColors[category] || 'blue';
+        return `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`;
+    }
+
+    // Helper function to clean and parse currency values
+    function parseCurrencyValue(value) {
+        // If value is explicitly null, undefined, or empty string, return null
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+        
+        // Convert to string and remove currency symbols and formatting
+        let cleanValue = String(value)
+            .replace(/Rp\.?\s*/gi, '')  // Remove "Rp" or "Rp."
+            .replace(/\./g, '')         // Remove dots (thousand separators)
+            .replace(/,/g, '')          // Remove commas
+            .trim();
+        
+        // If after cleaning we have empty string, return null
+        if (cleanValue === '') {
+            return null;
+        }
+        
+        // Parse the cleaned value
+        const numericValue = parseInt(cleanValue, 10);
+        
+        // Return null only if parsing failed, but allow 0 as valid value
+        return isNaN(numericValue) ? null : numericValue;
+    }
+
+    // Helper function to format currency for display - FIXED VERSION
+    function formatCurrency(value) {
+        // Check for null/undefined (missing data)
+        if (value === null || value === undefined) {
+            return 'Not specified';
+        }
+        // Allow 0 as valid value and format it
+        return `Rp ${value.toLocaleString('id-ID')}`;
+    }
+
+    // Updated function to create school description for popup - FIXED VERSION
+    function createSchoolPopupDescription(location) {
+        const bp = location.bp || 'N/A';
+        const status = location.status || 'N/A';
+        const accreditation = location.akreditasi || 'N/A';
+        
+        // Parse and format entrance fee
+        const entranceFeeValue = parseCurrencyValue(location.biaya_masuk);
+        const entranceFee = entranceFeeValue !== null ? entranceFeeValue.toLocaleString('id-ID') : 'Not specified';
+        
+        // Parse and format SPP
+        const sppValue = parseCurrencyValue(location.SPP);
+        const spp = sppValue !== null ? sppValue.toLocaleString('id-ID') : 'Not specified';
+        
+        return `Sekolah ${bp} ${status} dengan Akreditasi ${accreditation} dengan biaya masuk pendaftaran Rp. ${entranceFee} dan biaya SPP sebesar Rp. ${spp} per bulan.`;
+    }
+
+    // Updated function to create enhanced popup content with new description format
+    function createPopupContent(location) {
+        const description = createSchoolPopupDescription(location);
+        
+        return `
+            <div class="enhanced-popup">
+                <div class="popup-header">${location.nama_sekolah}</div>
+                <div class="popup-category">${location.bp}</div>
+                <div class="popup-description">${description}</div>
+                <div class="popup-coordinates">Coordinates: ${location.latitude}, ${location.longitude}</div>
+                <div class="popup-actions">
+                    <button class="popup-btn primary" onclick="showSidebar(${JSON.stringify(location).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-info-circle"></i> More Info
+                    </button>
+                    <button class="popup-btn" onclick="getDirections(${location.latitude}, ${location.longitude})">
+                        <i class="fas fa-directions"></i> Directions
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Function to create marker with enhanced popup
+    function createMarker(location) {
+        const icon = L.icon({
+            iconUrl: getMarkerIconUrl(location.bp),
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+            shadowSize: [41, 41]
+        });
+
+        const marker = L.marker([location.latitude, location.longitude], { icon: icon })
+            .bindPopup(createPopupContent(location), {
+                maxWidth: 300,
+                className: 'custom-popup'
+            });
+
+        marker.addTo(map);
+        markers.push(marker);
+
+        if (location.bp) {
+            categories.add(location.bp);
+        }
+
+        return marker;
+    }
+    
+    // Function to show sidebar with location details
+    function showSidebar(location) {
+        console.log('showSidebar called with:', location); // Debug log
+        
+        currentLocation = location;
+        
+        try {
+            // Update sidebar content with database fields
+            document.getElementById('sidebar-title').textContent = location.nama_sekolah;
+            document.getElementById('sidebar-category').textContent = `${getFullCategoryName(location.bp)} - NPSN: ${location.npsn || 'N/A'}`;
+            
+            // Update Contact section
+            const phoneElement = document.getElementById('sidebar-phone');
+            const phoneContact = document.getElementById('phone-contact');
+            const emailElement = document.getElementById('sidebar-email');
+            const emailContact = document.getElementById('email-contact');
+            
+            if (location.telepon && location.telepon !== '0') {
+                phoneElement.textContent = location.telepon;
+                phoneContact.style.display = 'block';
+            } else {
+                phoneContact.style.display = 'none';
+            }
+            
+            if (location.email) {
+                emailElement.textContent = location.email;
+                emailElement.href = `mailto:${location.email}`;
+                emailContact.style.display = 'block';
+            } else {
+                emailContact.style.display = 'none';
+            }
+            
+            // Update Costs section
+            const sppElement = document.getElementById('sidebar-spp');
+            const entryFeeElement = document.getElementById('sidebar-entry-fee');
+            
+            // Parse and display SPP
+            const sppValue = parseCurrencyValue(location.SPP);
+            sppElement.textContent = formatCurrency(sppValue);
+            
+            // Parse and display Entry Fee
+            const entryFeeValue = parseCurrencyValue(location.biaya_masuk);
+            entryFeeElement.textContent = formatCurrency(entryFeeValue);
+            
+            // Update website (you can add website field to your database)
+            const websiteElement = document.getElementById('sidebar-website');
+            const websiteInfo = document.getElementById('website-info');
+            if (location.website) {
+                websiteElement.href = location.website;
+                websiteInfo.style.display = 'flex';
+            } else {
+                websiteInfo.style.display = 'none';
+            }
+            
+            // Update Description section with status, accreditation, and facilities
+            const statusDescription = location.description || `Status: ${location.status || 'N/A'}`;
+            document.getElementById('status-description').textContent = statusDescription;
+            
+            // Update accreditation
+            const accreditationElement = document.getElementById('sidebar-accreditation');
+            if (location.akreditasi) {
+                accreditationElement.textContent = location.akreditasi;
+            } else {
+                accreditationElement.textContent = 'Not specified';
+            }
+            
+            // Update facilities (this is the new field you mentioned)
+            const facilitiesElement = document.getElementById('sidebar-facilities');
+            if (location.fasilitas) {
+                facilitiesElement.textContent = location.fasilitas;
+            } else {
+                facilitiesElement.textContent = 'Not specified';
+            }
+            
+            // Update coordinates
+            document.getElementById('sidebar-coordinates').textContent = `${location.latitude}, ${location.longitude}`;
+            
+            // Update creation info
+            const createdElement = document.getElementById('sidebar-created');
+            const createdInfo = document.getElementById('created-info');
+            if (location.created_at) {
+                const createdDate = new Date(location.created_at).toLocaleDateString('id-ID');
+                createdElement.textContent = `Data ditambahkan: ${createdDate}`;
+                createdInfo.style.display = 'flex';
+            } else {
+                createdInfo.style.display = 'none';
+            }
+            
+            // Update action button links
+            document.getElementById('directions-btn').onclick = () => getDirections(location.latitude, location.longitude);
+            document.getElementById('save-btn').onclick = () => saveLocation(location);
+            
+            // Show sidebar and adjust map
+            document.getElementById('sidebar').classList.add('active');
+            document.getElementById('map').classList.add('with-sidebar');
+            
+            console.log('Sidebar should now be visible'); // Debug log
+            
+            // Check if school is saved and update button state
+            if (isUserLoggedIn) {
+                fetch(`/api/check-saved-school/${location.id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateSaveButtonState(location.id, data.is_saved);
+                    })
+                    .catch(error => console.error('Error checking saved status:', error));
+            }
+
+            // Invalidate map size after animation
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 300);
+            
+        } catch (error) {
+            console.error('Error in showSidebar:', error);
+        }
+    }
+    
+    // Helper function to get full category name
+    function getFullCategoryName(bp) {
+        const categories = {
+            'SD': 'Sekolah Dasar',
+            'SMP': 'Sekolah Menengah Pertama', 
+            'SMA': 'Sekolah Menengah Atas',
+            'SMK': 'Sekolah Menengah Kejuruan'
+        };
+        return categories[bp] || bp;
+    }
+    
+    // Function to close sidebar
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('map').classList.remove('with-sidebar');
+        
+        // Invalidate map size after animation
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
+    }
+    
+    // Function to get directions (you can integrate with your preferred mapping service)
+    function getDirections(lat, lng) {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        window.open(url, '_blank');
+    }
+    
+    // Function to save location (implement your save logic)
+    function saveLocation(location) {
+        // Check if user is logged in (you'll need to pass this from backend)
+        if (!isUserLoggedIn) {
+            alert('Please log in to save schools');
+            return;
+        }
+        
+        fetch('/api/save-school', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                location_id: location.id,
+                npsn: location.npsn
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Saved: ${location.nama_sekolah}`);
+                // Update button state
+                updateSaveButtonState(location.id, true);
+            } else {
+                alert('Failed to save school: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving school');
+        });
+    }
+    
+    // Function to share location
+    function shareLocation(location) {
+        if (navigator.share) {
+            navigator.share({
+                title: location.nama_sekolah,
+                text: location.description,
+                url: window.location.href + `?lat=${location.latitude}&lng=${location.longitude}`
+            });
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            const url = window.location.href + `?lat=${location.latitude}&lng=${location.longitude}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Location link copied to clipboard!');
+            });
+        }
+    }
+    
+    // Function to clear all filters
+    function clearFilters() {
+        document.getElementById('category-filter').value = '';
+        document.getElementById('entrance-fee-filter').value = '';
+        document.getElementById('spp-filter').value = '';
+        document.getElementById('search-filter').value = '';
+        loadLocations();
+    }
+    
+    document.getElementById('show-saved-only').addEventListener('click', () => {
+        const categoryFilter = document.getElementById('category-filter').value;
+        const searchFilter = document.getElementById('search-filter').value; 
+        const entranceFeeRange = document.getElementById('entrance-fee-filter').value;
+        const sppRange = document.getElementById('spp-filter').value;
+        loadLocations(categoryFilter, searchFilter, entranceFeeRange, sppRange, true);
+    });
+
+    // Function to load locations with all filters
+    function loadLocations(categoryFilter = '', searchFilter = '', entranceFeeRange = '', sppRange = '', savedOnly = false) {
+        // Clear existing markers
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+        
+        let url = '/api/locations';
+        const params = new URLSearchParams();
+        
+        // Add savedOnly parameter BEFORE building URL
+        if (savedOnly) {
+            params.append('saved_only', 'true');
+        }
+        
+        if (categoryFilter) {
+            params.append('bp', categoryFilter);
+        }
+        
+        if (searchFilter) {
+            params.append('search', searchFilter);
+        }
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+        
+        // Fetch locations from API
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Apply client-side filtering for entrance fee and SPP
+                let filteredData = data;
+                
+                // Filter by entrance fee range
+                if (entranceFeeRange) {
+                    const [min, max] = entranceFeeRange.split('-').map(Number);
+                    filteredData = filteredData.filter(location => {
+                        const entranceFee = parseCurrencyValue(location.biaya_masuk);
+                        // Include locations where entrance fee is within range
+                        // If entranceFee is null (not specified), exclude from range filters
+                        return entranceFee !== null && entranceFee >= min && entranceFee <= max;
+                    });
+                }
+                
+                // Filter by SPP range
+                if (sppRange) {
+                    const [min, max] = sppRange.split('-').map(Number);
+                    filteredData = filteredData.filter(location => {
+                        const spp = parseCurrencyValue(location.SPP);
+                        // Include locations where SPP is within range
+                        // If SPP is null (not specified), exclude from range filters
+                        return spp !== null && spp >= min && spp <= max;
+                    });
+                }
+                
+                // Create markers for each filtered location
+                filteredData.forEach(location => {
+                    createMarker(location);
+                });
+                
+                // Update category filter if needed
+                if (categories.size > 0 && !categoryFilter) {
+                    const categorySelect = document.getElementById('category-filter');
+                    categorySelect.innerHTML = '<option value="">All Categories</option>';
+                    
+                    // Add categories to select
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        categorySelect.appendChild(option);
+                    });
+                }
+                
+                // If there are locations, fit the map to show all markers
+                if (markers.length > 0) {
+                    const group = L.featureGroup(markers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                } else {
+                    // If no results found, show a message or keep current view
+                    console.log('No locations found matching the current filters');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading locations:', error);
+            });
+    }
+    
+    function updateSaveButtonState(locationId, isSaved) {
+        const saveBtn = document.getElementById('save-btn');
+        if (isSaved) {
+            saveBtn.innerHTML = '<i class="fas fa-bookmark"></i><span>Saved</span>';
+            saveBtn.onclick = () => unsaveLocation(currentLocation);
+        } else {
+            saveBtn.innerHTML = '<i class="far fa-bookmark"></i><span>Save</span>';
+            saveBtn.onclick = () => saveLocation(currentLocation);
+        }
+    }
+
+    function unsaveLocation(location) {
+        fetch('/api/unsave-school', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                location_id: location.id
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Removed from saved: ${location.nama_sekolah}`);
+                updateSaveButtonState(location.id, false);
+            } else {
+                alert('Failed to remove school: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing school');
+        });
+    }
+    
+    // Close sidebar when clicking outside
+    document.addEventListener('click', (e) => {
+        const sidebar = document.getElementById('sidebar');
+        const isClickInsideSidebar = sidebar.contains(e.target);
+        const isClickOnMarker = e.target.closest('.leaflet-popup');
+        const isClickOnMoreInfo = e.target.closest('[onclick*="showSidebar"]');
+        
+        if (!isClickInsideSidebar && !isClickOnMarker && !isClickOnMoreInfo && sidebar.classList.contains('active')) {
+            // Don't close sidebar on map clicks, only on explicit close button
+            // closeSidebar();
+        }
+    });
+    
+    // Handle escape key to close sidebar
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('sidebar').classList.contains('active')) {
+            closeSidebar();
+        }
+    });
+    
+    // Load locations when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        loadLocations();
+        
+        if (isUserLoggedIn) {
+            document.getElementById('show-saved-only').style.display = 'inline-block';
+        }
+
+        // Set up filter event handlers
+        document.getElementById('apply-filters').addEventListener('click', () => {
+            const categoryFilter = document.getElementById('category-filter').value;
+            const searchFilter = document.getElementById('search-filter').value;
+            const entranceFeeRange = document.getElementById('entrance-fee-filter').value;
+            const sppRange = document.getElementById('spp-filter').value;
+            loadLocations(categoryFilter, searchFilter, entranceFeeRange, sppRange);
+        });
+        
+        // Set up clear filters button
+        document.getElementById('clear-filters').addEventListener('click', clearFilters);
+        
+        // Also apply filters when pressing Enter in search box
+        document.getElementById('search-filter').addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                const categoryFilter = document.getElementById('category-filter').value;
+                const searchFilter = document.getElementById('search-filter').value;
+                const entranceFeeRange = document.getElementById('entrance-fee-filter').value;
+                const sppRange = document.getElementById('spp-filter').value;
+                loadLocations(categoryFilter, searchFilter, entranceFeeRange, sppRange);
+            }
+        });
+    });
+    
+    // Make functions globally available
+    window.showSidebar = showSidebar;
+    window.closeSidebar = closeSidebar;
+    window.getDirections = getDirections;
+    window.saveLocation = saveLocation;
+    window.unsaveLocation = unsaveLocation;
+</script>
+{% endblock %}

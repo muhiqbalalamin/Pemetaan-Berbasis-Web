@@ -1,0 +1,695 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Nearby Schools</h2>
+    
+    <div class="mb-3">
+        <a href="{{ url_for('nearby_schools') }}" class="btn btn-primary">Search Again</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+
+    <!-- Enhanced Filter Section -->
+    <div class="filters mb-3">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Filters</span>
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                        <i class="fas fa-filter"></i> Toggle Filters
+                    </button>
+                </div>
+            </div>
+            <div class="collapse show" id="filterCollapse">
+                <div class="card-body">
+                    <!-- Basic Filters Row -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="category-filter" class="form-label">Filter by Category</label>
+                                <select class="form-select" id="category-filter">
+                                    <option value="">All Categories</option>
+                                    <option value="SD">SD</option>
+                                    <option value="SMP">SMP</option>
+                                    <option value="SMA">SMA</option>
+                                    <option value="SMK">SMK</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="status-filter" class="form-label">Filter by Status</label>
+                                <select class="form-select" id="status-filter">
+                                    <option value="">All Status</option>
+                                    <option value="Negeri">NEGERI</option>
+                                    <option value="Swasta">SWASTA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="search-filter" class="form-label">Search Schools</label>
+                                <input type="text" class="form-control" id="search-filter" placeholder="Enter school name">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fee Filters Row -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="entrance-fee-filter" class="form-label">Entrance Fee Range</label>
+                                <select class="form-select" id="entrance-fee-filter">
+                                    <option value="">All Entrance Fees</option>
+                                    <option value="0-1000000">Free - Rp 1,000,000</option>
+                                    <option value="1000000-5000000">Rp 1,000,000 - Rp 5,000,000</option>
+                                    <option value="5000000-10000000">Rp 5,000,000 - Rp 10,000,000</option>
+                                    <option value="10000000-25000000">Rp 10,000,000 - Rp 25,000,000</option>
+                                    <option value="25000000-50000000">Rp 25,000,000 - Rp 50,000,000</option>
+                                    <option value="50000000-100000000">Rp 50,000,000 - Rp 100,000,000</option>
+                                    <option value="100000000+">Above Rp 100,000,000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="spp-filter" class="form-label">Monthly Fee (SPP) Range</label>
+                                <select class="form-select" id="spp-filter">
+                                    <option value="">All Monthly Fees</option>
+                                    <option value="0-500000">Free - Rp 500,000</option>
+                                    <option value="500000-1000000">Rp 500,000 - Rp 1,000,000</option>
+                                    <option value="1000000-2000000">Rp 1,000,000 - Rp 2,000,000</option>
+                                    <option value="2000000-5000000">Rp 2,000,000 - Rp 5,000,000</option>
+                                    <option value="5000000+">Above Rp 5,000,000</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons Row -->
+                    <div class="row">
+                        <div class="col-12 text-end">
+                            <button id="apply-filters" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Apply Filters
+                            </button>
+                            <button id="reset-filters" class="btn btn-outline-secondary">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Filters Display -->
+                    <div class="row mt-3" id="active-filters-row" style="display: none;">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong>Active Filters:</strong>
+                                <div id="active-filters-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Map View -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Map View
+                </div>
+                <div class="card-body">
+                    <div id="map" style="height: 500px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- List View with Pagination -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>School List <span id="results-count" class="badge bg-secondary"></span></span>
+                    <div>
+                        <span id="pageInfo" class="mr-2">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+                        <div class="btn-group">
+                            <button id="prevPage" class="btn btn-sm btn-outline-secondary">&laquo; Prev</button>
+                            <button id="nextPage" class="btn btn-sm btn-outline-secondary">Next &raquo;</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if schools %}
+                        <div id="schoolsContainer" class="school-pages-container">
+                            <!-- Pages will be generated by JavaScript -->
+                        </div>
+                    {% else %}
+                        <p>No schools data found within the specified radius.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <label for="itemsPerPage">Schools per page:</label>
+                            <select id="itemsPerPage" class="form-control-sm ml-2">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
+                        <div class="swipe-indicator">
+                            <small class="text-muted">Press prev/next to navigate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+.school-pages-container {
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.school-page {
+    width: 100%;
+    transition: transform 0.3s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.school-page.active {
+    opacity: 1;
+    visibility: visible;
+    position: relative;
+}
+
+.badge.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge.badge-warning {
+    background-color: #ffc107;
+    color: black;
+}
+
+.swipe-indicator {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.filters {
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.fee-info {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.active-filters-list .badge {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+#active-filters-list {
+    margin-top: 10px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize map
+    var map = L.map('map').setView([{{ user_lat }}, {{ user_lng }}], 14);
+    var currentLat = {{ user_lat }};
+    var currentLng = {{ user_lng }};
+    var markers = [];
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // Add user location marker
+    var userIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34]
+    });
+    
+    var userMarker = L.marker([{{ user_lat }}, {{ user_lng }}], {icon: userIcon}).addTo(map);
+    userMarker.bindPopup('Your Location').openPopup();
+    
+    // Add radius circles
+    {% for category, radius in radius_config.items() %}
+        L.circle([{{ user_lat }}, {{ user_lng }}], {
+            color: getColorForCategory('{{ category }}'),
+            fillColor: getColorForCategory('{{ category }}'),
+            fillOpacity: 0.1,
+            radius: {{ radius }} * 1000  // Convert km to meters
+        }).addTo(map);
+    {% endfor %}    
+    
+    // Helper function to safely parse numeric values
+    function safeParseNumber(value) {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+        
+        // If it's already a number, return it
+        if (typeof value === 'number') {
+            return value;
+        }
+        
+        // Convert to string and clean up
+        let cleanValue = String(value)
+            .replace(/Rp\.?\s*/gi, '')  // Remove "Rp" or "Rp."
+            .replace(/\./g, '')         // Remove dots (thousand separators)
+            .replace(/,/g, '')          // Remove commas
+            .replace(/\s+/g, '')        // Remove whitespace
+            .trim();
+        
+        if (cleanValue === '') {
+            return null;
+        }
+        
+        const numericValue = parseInt(cleanValue, 10);
+        return isNaN(numericValue) ? null : numericValue;
+    }
+
+    // Helper function to format currency for display
+    function formatCurrency(value) {
+        if (value === null || value === undefined) {
+            return 'Not specified';
+        }
+        return `Rp ${value.toLocaleString('id-ID')}`;
+    }
+    
+    // Store all school data with properly parsed fee information
+    const allSchools = [
+        {% for school in schools %}
+            {
+                name: {{ school.nama_sekolah|tojson }},
+                category: {{ school.bp|tojson }},
+                status: {{ school.status|tojson }},
+                categoryStatus: {{ (school.bp ~ " " ~ school.status)|tojson }},
+                distance: {{ school.distance|string|tojson }},
+                withinRadius: {{ school.within_default_radius|tojson }},
+                lat: {{ school.latitude|float }},
+                lng: {{ school.longitude|float }},
+                // Use safe parsing for fee values
+                entranceFeeRaw: {{ school.biaya_masuk|tojson }},
+                sppRaw: {{ school.SPP|tojson }}
+            }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    // Parse fee values after data is loaded
+    allSchools.forEach(school => {
+        school.entranceFeeValue = safeParseNumber(school.entranceFeeRaw);
+        school.sppValue = safeParseNumber(school.sppRaw);
+    });
+    
+    // Add school markers with appropriate color
+    function addSchoolMarkers(filteredSchools) {
+        // Clear existing markers
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+        
+        filteredSchools.forEach(school => {
+            const iconUrl = getMarkerIconForCategory(school.category);
+            
+            const schoolIcon = L.icon({
+                iconUrl: iconUrl,
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34]
+            });
+            
+            const marker = L.marker([school.lat, school.lng], {icon: schoolIcon}).addTo(map);
+            
+            const entranceFeeText = formatCurrency(school.entranceFeeValue);
+            const sppText = formatCurrency(school.sppValue);
+            
+            marker.bindPopup(`
+                <b>${school.name}</b><br>
+                ${school.categoryStatus}<br>
+                Distance: ${school.distance} km<br>
+                <small>Entrance Fee: ${entranceFeeText}</small><br>
+                <small>Monthly Fee: ${sppText}</small>
+            `);
+            markers.push(marker);
+        });
+    }
+    
+    // Function to get marker icon URL based on school category
+    function getMarkerIconForCategory(category) {
+        const iconColors = {
+            'SD': 'green',
+            'SMP': 'blue',
+            'SMA': 'orange',
+            'SMK': 'violet'
+        };
+        
+        const color = iconColors[category] || 'blue';
+        return `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`;
+    }
+    
+    // Function to get color for category (for circle)
+    function getColorForCategory(category) {
+        const colors = {
+            'SD': '#4CAF50',  // Green
+            'SMP': '#2196F3', // Blue
+            'SMA': '#F44336', // Red
+            'SMK': '#9C27B0', // Purple
+        };
+        return colors[category] || '#9C27B0'; // Default to purple
+    }
+    
+    // Function to check if fee is within range
+    function isWithinFeeRange(feeValue, rangeValue) {
+        if (!rangeValue) return true;
+        
+        console.log(`Checking fee: ${feeValue} against range: ${rangeValue}`);
+        
+        // If fee is null/undefined (not specified), only include in "0-" ranges
+        if (feeValue === null || feeValue === undefined) {
+            return rangeValue.startsWith('0-');
+        }
+        
+        if (rangeValue.includes('+')) {
+            // Handle ranges like "5000000+"
+            const min = parseInt(rangeValue.replace('+', ''));
+            const result = feeValue >= min;
+            console.log(`Range ${rangeValue}: ${feeValue} >= ${min} = ${result}`);
+            return result;
+        } else {
+            // Handle ranges like "1000000-5000000"
+            const [min, max] = rangeValue.split('-').map(v => parseInt(v));
+            const result = feeValue >= min && feeValue <= max;
+            console.log(`Range ${rangeValue}: ${min} <= ${feeValue} <= ${max} = ${result}`);
+            return result;
+        }
+    }
+    
+    // Fit map to include all markers
+    function fitMapToBounds(schools) {
+        var bounds = [];
+        bounds.push([{{ user_lat }}, {{ user_lng }}]);
+        
+        schools.forEach(school => {
+            bounds.push([school.lat, school.lng]);
+        });
+        
+        if (bounds.length > 1) {
+            map.fitBounds(bounds);
+        }
+    }
+    
+    // Pagination functionality
+    let currentPageIndex = 0;
+    let itemsPerPage = 10;
+    let totalPages = Math.ceil(allSchools.length / itemsPerPage);
+    let filteredSchools = [...allSchools];
+    
+    // Initialize pagination
+    function initPagination() {
+        totalPages = Math.ceil(filteredSchools.length / itemsPerPage);
+        document.getElementById('totalPages').textContent = totalPages;
+        document.getElementById('results-count').textContent = `${filteredSchools.length} schools`;
+        renderSchoolPages();
+        showPage(0);
+        
+        // Update navigation buttons state
+        updateNavButtons();
+    }
+    
+    // Render all pages
+    function renderSchoolPages() {
+        const container = document.getElementById('schoolsContainer');
+        container.innerHTML = '';
+        
+        if (filteredSchools.length === 0) {
+            container.innerHTML = '<p>No schools match the selected filters.</p>';
+            return;
+        }
+        
+        for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+            const startIndex = pageIndex * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredSchools.length);
+            const pageSchools = filteredSchools.slice(startIndex, endIndex);
+            
+            const page = document.createElement('div');
+            page.className = 'school-page';
+            page.id = `page-${pageIndex}`;
+            page.dataset.pageIndex = pageIndex;
+            
+            let pageContent = `
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>School Name</th>
+                            <th>Category</th>
+                            <th>Distance (km)</th>
+                            <th>Entrance Fee</th>
+                            <th>Monthly Fee</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            pageSchools.forEach(school => {
+                const entranceFeeText = formatCurrency(school.entranceFeeValue);
+                const sppText = formatCurrency(school.sppValue);
+                
+                pageContent += `
+                    <tr>
+                        <td>${school.name}</td>
+                        <td>${school.categoryStatus}</td>
+                        <td>${school.distance}</td>
+                        <td class="fee-info">${entranceFeeText}</td>
+                        <td class="fee-info">${sppText}</td>
+                        <td>
+                            <span class="badge ${school.withinRadius ? 'badge-success' : 'badge-warning'}">
+                                ${school.withinRadius ? 'LOLOS' : 'TIDAK LOLOS'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            pageContent += `
+                    </tbody>
+                </table>
+            `;
+            
+            page.innerHTML = pageContent;
+            container.appendChild(page);
+        }
+    }
+    
+    // Show specific page
+    function showPage(pageIndex) {
+        if (pageIndex < 0 || pageIndex >= totalPages) return;
+        
+        // Hide all pages
+        document.querySelectorAll('.school-page').forEach(page => {
+            page.classList.remove('active');
+        });
+        
+        // Show selected page
+        const targetPage = document.getElementById(`page-${pageIndex}`);
+        if (targetPage) {
+            targetPage.classList.add('active');
+            currentPageIndex = pageIndex;
+            document.getElementById('currentPage').textContent = pageIndex + 1;
+            updateNavButtons();
+        }
+    }
+    
+    // Update navigation buttons state
+    function updateNavButtons() {
+        document.getElementById('prevPage').disabled = currentPageIndex === 0;
+        document.getElementById('nextPage').disabled = currentPageIndex === totalPages - 1;
+    }
+    
+    // Update active filters display
+    function updateActiveFiltersDisplay() {
+        const activeFilters = [];
+        const categoryFilter = document.getElementById('category-filter').value;
+        const statusFilter = document.getElementById('status-filter').value;
+        const searchFilter = document.getElementById('search-filter').value;
+        const entranceFeeFilter = document.getElementById('entrance-fee-filter').value;
+        const sppFilter = document.getElementById('spp-filter').value;
+        
+        if (categoryFilter) activeFilters.push(`Category: ${categoryFilter}`);
+        if (statusFilter) activeFilters.push(`Status: ${statusFilter}`);
+        if (searchFilter) activeFilters.push(`Search: "${searchFilter}"`);
+        if (entranceFeeFilter) {
+            const text = document.getElementById('entrance-fee-filter').selectedOptions[0].text;
+            activeFilters.push(`Entrance Fee: ${text}`);
+        }
+        if (sppFilter) {
+            const text = document.getElementById('spp-filter').selectedOptions[0].text;
+            activeFilters.push(`Monthly Fee: ${text}`);
+        }
+        
+        const activeFiltersRow = document.getElementById('active-filters-row');
+        const activeFiltersList = document.getElementById('active-filters-list');
+        
+        if (activeFilters.length > 0) {
+            activeFiltersList.innerHTML = activeFilters.map(filter => 
+                `<span class="badge bg-primary">${filter}</span>`
+            ).join(' ');
+            activeFiltersRow.style.display = 'block';
+        } else {
+            activeFiltersRow.style.display = 'none';
+        }
+    }
+    
+    // Filter schools based on criteria
+    function filterSchools() {
+        const categoryFilter = document.getElementById('category-filter').value;
+        const statusFilter = document.getElementById('status-filter').value;
+        const searchFilter = document.getElementById('search-filter').value.toLowerCase();
+        const entranceFeeFilter = document.getElementById('entrance-fee-filter').value;
+        const sppFilter = document.getElementById('spp-filter').value;
+        
+        console.log('Applying filters:', {
+            category: categoryFilter,
+            status: statusFilter,
+            search: searchFilter,
+            entranceFee: entranceFeeFilter,
+            spp: sppFilter
+        });
+        
+        filteredSchools = allSchools.filter(school => {
+            // Apply category filter
+            if (categoryFilter && school.category !== categoryFilter) {
+                return false;
+            }
+            
+            // Apply status filter
+            if (statusFilter && school.status !== statusFilter) {
+                return false;
+            }
+            
+            // Apply search filter
+            if (searchFilter && !school.name.toLowerCase().includes(searchFilter)) {
+                return false;
+            }
+            
+            // Apply entrance fee filter
+            if (entranceFeeFilter && !isWithinFeeRange(school.entranceFeeValue, entranceFeeFilter)) {
+                console.log(`School ${school.name} filtered out by entrance fee: ${school.entranceFeeValue} not in ${entranceFeeFilter}`);
+                return false;
+            }
+            
+            // Apply SPP filter
+            if (sppFilter && !isWithinFeeRange(school.sppValue, sppFilter)) {
+                console.log(`School ${school.name} filtered out by SPP: ${school.sppValue} not in ${sppFilter}`);
+                return false;
+            }
+            
+            return true;
+        });
+        
+        console.log(`Filtered results: ${filteredSchools.length} schools`);
+        
+        // Update active filters display
+        updateActiveFiltersDisplay();
+        
+        // Update markers and pagination
+        addSchoolMarkers(filteredSchools);
+        fitMapToBounds(filteredSchools);
+        initPagination();
+    }
+    
+    // Navigation button event listeners
+    document.getElementById('prevPage').addEventListener('click', function() {
+        if (currentPageIndex > 0) {
+            showPage(currentPageIndex - 1);
+        }
+    });
+    
+    document.getElementById('nextPage').addEventListener('click', function() {
+        if (currentPageIndex < totalPages - 1) {
+            showPage(currentPageIndex + 1);
+        }
+    });
+    
+    // Items per page change handler
+    document.getElementById('itemsPerPage').addEventListener('change', function() {
+        itemsPerPage = parseInt(this.value);
+        initPagination();
+    });
+    
+    // Filter button event listener
+    document.getElementById('apply-filters').addEventListener('click', function() {
+        filterSchools();
+    });
+    
+    // Reset filters button event listener
+    document.getElementById('reset-filters').addEventListener('click', function() {
+        document.getElementById('category-filter').value = '';
+        document.getElementById('status-filter').value = '';
+        document.getElementById('search-filter').value = '';
+        document.getElementById('entrance-fee-filter').value = '';
+        document.getElementById('spp-filter').value = '';
+        
+        filteredSchools = [...allSchools];
+        updateActiveFiltersDisplay();
+        addSchoolMarkers(filteredSchools);
+        fitMapToBounds(filteredSchools);
+        initPagination();
+    });
+    
+    // Search filter enter key handler
+    document.getElementById('search-filter').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            filterSchools();
+        }
+    });
+    
+    // Initialize swipe gestures with Hammer.js
+    const container = document.getElementById('schoolsContainer');
+    const hammer = new Hammer(container);
+    
+    hammer.on('swipeleft', function() {
+        if (currentPageIndex < totalPages - 1) {
+            showPage(currentPageIndex + 1);
+        }
+    });
+    
+    hammer.on('swiperight', function() {
+        if (currentPageIndex > 0) {
+            showPage(currentPageIndex - 1);
+        }
+    });
+    
+    // Initialize on load
+    addSchoolMarkers(allSchools);
+    fitMapToBounds(allSchools);
+    initPagination();
+});
+</script>
+{% endblock %}

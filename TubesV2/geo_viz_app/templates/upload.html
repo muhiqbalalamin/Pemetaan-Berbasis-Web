@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Data - GeoSpatial Map{% endblock %}
+
+{% block content %}
+<h1>Upload Location Data</h1>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Upload School Location Data</h5>
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-muted">
+                            File CSV harus berisikan hal-hal dibawah ini:
+                            <ul>
+                                <li><strong>nama_sekolah</strong> - The name of the school</li>
+                                <li><strong>npsn</strong> - National School Identification Number (Nomor Pokok Sekolah Nasional)</li>
+                                <li><strong>bp</strong> - Category or type of school (e.g., SD, SMP, SMA, SMK)</li>
+                                <li><strong>status</strong> - Status of the school (Negeri / Swasta )</li>
+                                <li><strong>latitude</strong> - Latitude coordinate</li>
+                                <li><strong>longitude</strong> - Longitude coordinate</li>
+                                <li><strong>akreditasi</strong> - Accreditation status of the school (e.g., A, B, C)</li>
+                                <li><strong>telepon</strong> - Phone number of the school</li>
+                                <li><strong>biaya_masuk</strong> - Entry/initial registration fee</li>
+                                <li><strong>SPP</strong> - Monthly tuition fee</li>
+                                <li><strong>email</strong> - Email address of the school</li>
+                                <li><strong>fasilitas</strong> - facilities of the school</li>
+                            </ul>
+                        </p>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Upload School Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Sample CSV Format</h5>
+                <pre class="bg-light p-3 rounded">
+nama_sekolah,npsn,bp,status,latitude,longitude,akreditasi,telepon,biaya_masuk,SPP,email,fasilitas
+SMP BUMI,10022323,SMP,Negeri,40.7829,-73.9654,A,02237263,100000,20000,somtinh@gmail.com,"Ruang fasilitas, fasilitas"
+SD MARS,384929483,SD,Swasta,40.7484,-73.9857,B,02382342,90000,25000,omtinh@yahoo.com,"fasilitas"
+SMA BEKASI,23837823,SMA,Negeri,40.7580,-73.9855,C,023872387,150000,200000,test@mail.co.id,"fasilitas Ruang, ruang"
+</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Upload Box for Pendaftar Data -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Upload Registration Data (Data Pendaftar)</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('upload_pendaftar') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="pendaftar_file" class="form-label">Select Pendaftar CSV File</label>
+                        <input type="file" class="form-control" id="pendaftar_file" name="file" accept=".csv" required>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-muted">
+                            File CSV untuk data pendaftar harus memiliki kolom:
+                            <ul>
+                                <li><strong>npsn</strong> - National School Identification Number (to match with existing schools)</li>
+                                <li><strong>tahun</strong> - Year of registration (e.g., 2022, 2023, 2024)</li>
+                                <li><strong>pendaftar</strong> - Number of registrants/applicants</li>
+                            </ul>
+                        </p>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <small><i class="fas fa-info-circle"></i> Pastikan NPSN pada file ini sesuai dengan NPSN sekolah yang sudah ada di database.</small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Upload Pendaftar Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-body">
+                <h5 class="card-title text-success">Sample Pendaftar CSV Format</h5>
+                <pre class="bg-light p-3 rounded">
+npsn,tahun,pendaftar
+10022323,2022,150
+10022323,2023,175
+10022323,2024,200
+384929483,2022,120
+384929483,2023,135
+384929483,2024,140
+23837823,2022,300
+23837823,2023,325
+23837823,2024,350
+</pre>
+                <div class="mt-3">
+                    <h6 class="text-success">Tips:</h6>
+                    <ul class="small text-muted">
+                        <li>Satu baris untuk setiap kombinasi sekolah-tahun</li>
+                        <li>NPSN harus sudah ada di database sekolah</li>
+                        <li>Tahun dalam format 4 digit (YYYY)</li>
+                        <li>Jumlah pendaftar dalam angka bulat</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
